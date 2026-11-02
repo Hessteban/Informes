@@ -136,3 +136,5 @@ textarea { resize: none; min-height: 92px; line-height: 1.45; }
 .modal .actions .btn small { color: var(--muted); font-weight: 400; }
 
 .top .back { gap: 2px; align-items: center; padding: 8px 10px 8px 4px; font-weight: 650; font-size: 15px; }
+
+.top .logo { height: 38px; width: auto; background: #fff; border-radius: 8px; padding: 4px 8px; flex: none; display: block; }
