@@ -264,7 +264,7 @@
     if (!rows) rows = photoRow({ imagen: null, comentario: '' }, 1, null);
 
     // Firma al pie de la última página, centrada, con el nombre del especialista
-    var FR = '<w:framePr w:w="5200" w:hSpace="0" w:wrap="around" w:vAnchor="margin" w:hAnchor="page" w:xAlign="center" w:yAlign="bottom"/>';
+    var FR = '<w:framePr w:w="5200" w:hSpace="0" w:wrap="notBeside" w:vAnchor="page" w:hAnchor="page" w:xAlign="center" w:y="12500"/>';
     var SF = '<w:rFonts w:asciiTheme="minorHAnsi" w:hAnsiTheme="minorHAnsi" w:cstheme="minorHAnsi"/>';
     var nombre = String(P.especialista || '').trim();
     var cargoFirma = String(P.cargo || '').trim();

@@ -1,6 +1,6 @@
 /* Service worker: guarda la app completa para usarla sin conexión.
    Si modificas cualquier archivo, sube el número de CACHE para que los equipos se actualicen. */
-const CACHE = 'informe-especialista-v11';
+const CACHE = 'informe-especialista-v14';
 const ARCHIVOS = [
   './', 'index.html', 'style.css', 'app.js', 'docx.js', 'template.js', 'jszip.min.js',
   'manifest.webmanifest', 'icons/fam-192.png', 'icons/fam-512.png', 'icons/fam-maskable-512.png', 'icons/fam-apple-180.png'
