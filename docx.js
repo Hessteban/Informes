@@ -233,7 +233,7 @@
     // Servicio (portada y encabezados). Si no se cambia, los encabezados quedan intactos.
     var SERV0 = 'Ingeniería E Inspección para Habilitación Del Puente Apilador CV-013, BHP SPENCE';
     var PO0 = '4518931042';
-    var serv = String(P.servicio == null ? SERV0 : P.servicio).replace(/\s*\n\s*/g, ' ').trim() || SERV0;
+    var serv = String(P.servicio == null ? SERV0 : P.servicio).replace(/\s*\n\s*/g, ' ').trim();
     var po = String(P.po == null ? PO0 : P.po).trim();
     xml = setParaText(xml, '37B6FA34', 'Servicio: ' + String(P.servicio == null ? SERV0 : P.servicio).replace(/\r/g, '').trim());
 

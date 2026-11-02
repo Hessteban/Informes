@@ -74,7 +74,7 @@
     var t = today();
     return {
       id: uid(), creado: Date.now(), actualizado: Date.now(),
-      portada: { servicio: SERVICIO0, po: PO0, fechaEmision: t, cliente: '', equipo: '', especialista: '', cargo: '', fecha: t },
+      portada: { servicio: '', po: '', fechaEmision: '', cliente: '', equipo: '', especialista: '', cargo: '', fecha: '' },
       objetivo: '', alcance: '', descripcion: '', fotosIntro: '',
       fotos: [blankFoto(), blankFoto(), blankFoto(), blankFoto(), blankFoto()],
       recomendaciones: '', conclusion: '', anexos: ''
@@ -327,7 +327,9 @@
     var llenas = cur.fotos.filter(usada).length;
     var vacias = cur.fotos.length - llenas;
     var upd = ls('actualizarIndice') !== '0';
-    modal('Exportar a Word', '<p>Se generará el informe con el formato de la plantilla: ' + llenas + (llenas === 1 ? ' registro fotográfico' : ' registros fotográficos') + (vacias ? ' (' + vacias + ' recuadro' + (vacias === 1 ? '' : 's') + ' vacío' + (vacias === 1 ? '' : 's') + ' no se incluye' + (vacias === 1 ? '' : 'n') + ')' : '') + '.</p>' +
+    var P0 = cur.portada, faltan = [['servicio', 'Servicio'], ['po', 'N° de PO'], ['fechaEmision', 'Fecha de emisión'], ['cliente', 'Cliente'], ['equipo', 'Equipo/Componente'], ['especialista', 'Especialista'], ['cargo', 'Cargo'], ['fecha', 'Fecha']].filter(function (k) { return !String(P0[k[0]] || '').trim(); }).map(function (k) { return k[1]; });
+    var avisoFalta = faltan.length ? '<p style="color:var(--danger)">Campos de portada vacíos: ' + h(faltan.join(', ')) + '.</p>' : '';
+    modal('Exportar a Word', '<p>Se generará el informe con el formato de la plantilla: ' + llenas + (llenas === 1 ? ' registro fotográfico' : ' registros fotográficos') + (vacias ? ' (' + vacias + ' recuadro' + (vacias === 1 ? '' : 's') + ' vacío' + (vacias === 1 ? '' : 's') + ' no se incluye' + (vacias === 1 ? '' : 'n') + ')' : '') + '.</p>' + avisoFalta +
       '<label class="check"><input type="checkbox" id="optIdx"' + (upd ? ' checked' : '') + '><span>Pedir a Word que recalcule el índice al abrir (verifica los números de página; Word preguntará una vez). El índice ya viene con los números calculados.</span></label>', [
       { label: ICON.word + 'Generar documento', cls: 'primary', close: false, fn: function () {
         var o = $('#optIdx'); var actualizar = o ? o.checked : true; ls('actualizarIndice', actualizar ? '1' : '0');
@@ -396,6 +398,65 @@
   });
   $('#fileJson').addEventListener('change', function (e) { var f = e.target.files[0]; e.target.value = ''; if (f) importarArchivo(f); });
 
+
+  /* ====================== cámara dentro de la app ====================== */
+  var camStream = null, camFid = null, camCount = 0;
+  function cerrarCamara() {
+    if (camStream) { camStream.getTracks().forEach(function (t) { t.stop(); }); camStream = null; }
+    var o = document.getElementById('cam'); if (o) o.remove();
+    if (camCount) { touch(); renderFotos(); }
+    camCount = 0;
+  }
+  async function abrirCamara(fid) {
+    camFid = fid; camCount = 0;
+    var android = /android/i.test(navigator.userAgent);
+    // En iPhone se usa la cámara del sistema (ya funciona); en Android/otros se pide permiso y se abre la cámara integrada.
+    var puede = navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext;
+    if (!puede || esIOS()) { pickId = fid; var inp = $('#fileCam'); inp.click(); return; }
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }, audio: false });
+    } catch (e) {
+      var denegado = e && (e.name === 'NotAllowedError' || e.name === 'SecurityError');
+      modal(denegado ? 'Permiso de cámara denegado' : 'No se pudo abrir la cámara',
+        denegado ? '<p>Para usar la cámara, permite el acceso: toca el ícono de candado (o los 3 puntos ⋮ → Información del sitio) junto a la dirección → <b>Permisos → Cámara → Permitir</b>. En la app instalada: Ajustes de Android → Aplicaciones → Informe → Permisos → Cámara.</p>' : '<p>' + h(e && e.message || e) + '</p>',
+        [{ label: 'Usar la cámara del teléfono', cls: 'primary', fn: function () { pickId = fid; $('#fileCam').click(); } }, { label: 'Cerrar' }]);
+      return;
+    }
+    var o = document.createElement('div'); o.id = 'cam'; o.className = 'cam';
+    o.innerHTML = '<video playsinline autoplay muted></video><div class="camtop"><span id="camN">Listo para capturar</span></div>' +
+      '<div class="cambar"><button class="btn" data-c="x">Listo</button><button class="shutter" data-c="shot" aria-label="Capturar"></button><button class="btn" data-c="flip">Girar</button></div>';
+    document.body.appendChild(o);
+    var v = o.querySelector('video'); v.srcObject = camStream; v.play().catch(function () { });
+    o.addEventListener('click', async function (e) {
+      var c = e.target.closest('[data-c]'); if (!c) return;
+      if (c.dataset.c === 'x') return cerrarCamara();
+      if (c.dataset.c === 'flip') {
+        var cur0 = camStream.getVideoTracks()[0].getSettings().facingMode;
+        camStream.getTracks().forEach(function (t) { t.stop(); });
+        try { camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cur0 === 'user' ? 'environment' : 'user' }, audio: false }); v.srcObject = camStream; } catch (er) { toast('No se pudo cambiar de cámara'); }
+        return;
+      }
+      if (!v.videoWidth) return;
+      var cv = document.createElement('canvas'); cv.width = v.videoWidth; cv.height = v.videoHeight;
+      cv.getContext('2d').drawImage(v, 0, 0);
+      var blob = await new Promise(function (r) { cv.toBlob(r, 'image/jpeg', 0.9); });
+      try {
+        var r = await procesarImagen(blob);
+        var f = camCount === 0 ? fotoById(camFid) : null;
+        if (!f) { f = cur.fotos.find(function (x) { return !usada(x); }); if (!f) { f = blankFoto(); cur.fotos.push(f); } }
+        Object.assign(f, r); camCount++; touch();
+        var n = document.getElementById('camN'); if (n) n.textContent = camCount + (camCount === 1 ? ' foto tomada' : ' fotos tomadas');
+        if (navigator.vibrate) navigator.vibrate(30);
+      } catch (er) { toast('No se pudo guardar la foto'); }
+    });
+  }
+  $('#fileCam').addEventListener('change', async function (e) {
+    var file = e.target.files[0]; e.target.value = '';
+    if (!file || !pickId) return; var f = fotoById(pickId); if (!f) return;
+    toast('Procesando imagen…', 8000);
+    try { Object.assign(f, await procesarImagen(file)); touch(); renderFotos(); toast('Imagen insertada'); } catch (err) { toast('No se pudo cargar esa imagen'); }
+  });
+
   /* ====================== vistas ====================== */
   var app = $('#app');
   var deferredInstall = null;
@@ -447,7 +508,8 @@
       '<button class="btn icon sm danger" data-act="foto-del" aria-label="Eliminar recuadro">' + ICON.trash + '</button></span></header>' +
       '<button class="dropbox' + (f.imagen ? ' has' : '') + '" data-act="foto-pick" aria-label="' + (f.imagen ? 'Cambiar imagen' : 'Insertar imagen') + '">' +
       (f.imagen ? '<img alt="Foto ' + (i + 1) + '" src="' + f.imagen + '">' : ICON.cam + '<span>Insertar imagen</span>') + '</button>' +
-      (f.imagen ? '<div class="row"><button class="btn sm" data-act="foto-pick">Cambiar imagen</button><button class="btn sm danger" data-act="foto-clear">Quitar imagen</button></div>' : '') +
+      '<div class="row"><button class="btn sm" data-act="foto-cam" style="flex:1">' + ICON.cam + 'Tomar foto</button><button class="btn sm" data-act="foto-pick" style="flex:1">Galería</button>' +
+      (f.imagen ? '<button class="btn sm danger" data-act="foto-clear">Quitar</button>' : '') + '</div>' +
       '<label class="f">Descripción:</label><textarea data-foto="comentario" placeholder="Comentario sobre la imagen…">' + h(f.comentario) + '</textarea>' +
       '<label class="f">Condición encontrada:</label><div class="seg" role="group" aria-label="Condición encontrada">' +
       CONDS.map(function (c) { return '<button type="button" class="' + c[0] + (f.condicion === c[0] ? ' on' : '') + '" data-act="cond" data-v="' + c[0] + '" aria-pressed="' + (f.condicion === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div>' +
@@ -541,6 +603,7 @@
     else if (act === 'respaldo') respaldarActual();
     else if (act === 'word') exportarWord();
     else if (act === 'foto-pick') { pickId = fid; $('#filePick').click(); }
+    else if (act === 'foto-cam') abrirCamara(fid);
     else if (act === 'foto-multi') $('#fileMulti').click();
     else if (act === 'foto-add') { cur.fotos.push(blankFoto()); touch(); renderFotos(); var last = $('#fotos').lastElementChild; if (last) last.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     else if (act === 'cond') {

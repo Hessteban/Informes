@@ -138,3 +138,12 @@ textarea { resize: none; min-height: 92px; line-height: 1.45; }
 .top .back { gap: 2px; align-items: center; padding: 8px 10px 8px 4px; font-weight: 650; font-size: 15px; }
 
 .top .logo { height: 38px; width: auto; background: #fff; border-radius: 8px; padding: 4px 8px; flex: none; display: block; }
+
+/* cámara integrada */
+.cam { position: fixed; inset: 0; z-index: 80; background: #000; display: flex; flex-direction: column; }
+.cam video { flex: 1; min-height: 0; width: 100%; object-fit: cover; background: #000; }
+.camtop { position: absolute; top: calc(12px + var(--sat)); left: 0; right: 0; text-align: center; color: #fff; font-weight: 650; text-shadow: 0 1px 4px #000; pointer-events: none; }
+.cambar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px calc(16px + var(--sab)); background: rgba(0,0,0,.65); }
+.cambar .btn { min-width: 84px; background: rgba(255,255,255,.14); color: #fff; border-color: transparent; }
+.shutter { width: 72px; height: 72px; border-radius: 50%; border: 5px solid #fff; background: rgba(255,255,255,.25); cursor: pointer; padding: 0; }
+.shutter:active { background: #fff; }
