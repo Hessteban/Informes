@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Informe Especialista</title>
+<meta name="theme-color" content="#0b2a45">
+<meta name="description" content="Informe de especialista con registro fotográfico. Funciona sin conexión.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Informe">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="style.css">
+<script>
+/* Diagnóstico: si la app no arranca en unos segundos, explica por qué en vez de quedarse en "Cargando…" */
+window.__errs = [];
+window.addEventListener('error', function (e) { window.__errs.push((e.message || 'error') + (e.lineno ? ' (línea ' + e.lineno + ')' : '')); });
+window.addEventListener('unhandledrejection', function (e) { window.__errs.push('promesa: ' + ((e.reason && e.reason.message) || e.reason)); });
+setTimeout(function () {
+  var a = document.getElementById('app');
+  if (!a || a.querySelector('[data-act]')) return;
+  var ok = function (f) { try { return !!f(); } catch (x) { return false; } };
+  a.innerHTML = '<div style="padding:24px;font:16px/1.5 system-ui"><h2 style="margin-top:0">La aplicación no pudo iniciar</h2>' +
+    '<p>Si abriste este archivo desde la app <b>Archivos</b> (vista previa) o desde un correo/WhatsApp, iOS no ejecuta aplicaciones web de esa forma. Abre la aplicación desde su <b>dirección https publicada, en Safari</b>, e instálala con Compartir &rarr; Agregar a pantalla de inicio.</p>' +
+    '<p style="font-size:13px;opacity:.75">Detalle técnico: ' + (location.protocol || '?') + ' &middot; JS ' + (window.JSZip ? 'ok' : 'sin JSZip') + ' &middot; indexedDB ' + (ok(function () { return window.indexedDB; }) ? 'ok' : 'no') + ' &middot; localStorage ' + (ok(function () { localStorage.getItem('x'); return true; }) ? 'ok' : 'no') +
+    (window.__errs.length ? '<br>Errores: ' + window.__errs.join(' | ').replace(/</g, '&lt;') : '') + '</p></div>';
+}, 8000);
+</script>
+</head>
+<body>
+<div id="app" aria-live="polite"><p style="padding:24px;font:16px system-ui">Cargando…</p></div>
+<noscript><p style="padding:24px">Esta aplicación necesita JavaScript.</p></noscript>
+
+<div id="modal" class="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody"></div>
+    <div id="modalActions" class="actions"></div>
+  </div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<input id="filePick" type="file" accept="image/*" hidden>
+<input id="fileMulti" type="file" accept="image/*" multiple hidden>
+<input id="fileJson" type="file" accept=".json,application/json,text/plain,application/octet-stream" hidden>
+
+<script src="jszip.min.js"></script>
+<script src="template.js"></script>
+<script src="docx.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
