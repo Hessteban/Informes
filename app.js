@@ -279,7 +279,7 @@
 
   // 4) Descarga automática del .json (todos los informes): con cambios, como máximo 1 archivo cada 10 min, y al volver al inicio
   var ultimaAuto = +ls('ultimaAuto') || 0, autoTimer = null;
-  function autoActiva() { var v = ls('autoDescarga'); return v === '1' || (v === null && !esIOS()); }  // en iOS el navegador bloquea descargas sin toque: por defecto apagada
+  function autoActiva() { return true; }  // siempre activa
   async function autoDescargar(forzar) {
     try {
       if (!autoActiva()) return false;
@@ -431,10 +431,9 @@
       '<button class="btn" data-act="importar">Cargar archivo .json</button></div>' +
       (items ? '<ul class="list">' + items + '</ul>' : '<div class="empty"><p><strong>Aún no hay informes</strong></p><p>Crea uno nuevo o importa un respaldo .json.</p></div>') +
       (metas.length ? '<div class="row" style="margin-top:16px"><button class="btn" data-act="respaldar-todo" style="flex:1">' + ICON.json + 'Respaldar todo (.json)</button></div>' : '') +
-      '<div class="row" style="margin-top:10px"><button class="btn" data-act="auto-toggle" style="flex:1">Descarga automática .json: ' + (autoActiva() ? 'Activada' : 'Desactivada') + '</button></div>' +
       '<div class="row" style="margin-top:10px"><button class="btn" data-act="copias" style="flex:1">Copias automáticas</button>' +
       (soportaArchivo ? (fileHandle ? '<button class="btn" data-act="detener-archivo" style="flex:1">Desactivar respaldo en archivo</button>' : '<button class="btn" data-act="elegir-archivo" style="flex:1">Respaldo automático en archivo</button>') : '') + '</div>' +
-      '<p class="hint" style="margin-top:12px">Todo se guarda en el dispositivo en cada cambio. Con la descarga automática activada se baja un archivo .json (todos los informes) tras un cambio y luego cada 10 min si hay cambios nuevos, y al volver al inicio. Si el navegador pregunta, permite las descargas múltiples. ' + (soportaArchivo ? 'El respaldo en archivo se reescribe solo tras cada cambio y cada 10 min.' : '') + '</p>' +
+      '<p class="hint" style="margin-top:12px">Todo se guarda en el dispositivo en cada cambio. Con la descarga automática (siempre activa) se baja un archivo .json (todos los informes) tras un cambio y luego cada 10 min si hay cambios nuevos, y al volver al inicio. Si el navegador pregunta, permite las descargas múltiples. ' + (soportaArchivo ? 'El respaldo en archivo se reescribe solo tras cada cambio y cada 10 min.' : '') + '</p>' +
       '<p class="foot">' + (navigator.serviceWorker && navigator.serviceWorker.controller ? 'Funciona sin conexión · ' : '') + 'Los datos se guardan solo en este dispositivo.</p></main>';
   }
 
